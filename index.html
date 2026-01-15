@@ -7,10 +7,11 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <!-- ========== SLIDE 1 : FORM INPUT ========== -->
 <div id="slide1" class="slide">
   <h2>Form Kehadiran Apel Pagi</h2>
-  <button id="toSlide2Btn" style="max-width: 150px; align-items: right; position: relative; bottom: 20px;">Login Admin</button>
+  <button id="toSlide2Btn" style="max-width:150px;position:relative;bottom:20px;">Login Admin</button>
 
   <form id="attendanceForm">
     <label>Nama:</label><br />
@@ -37,7 +38,6 @@
         <option value="Izin">Izin</option>
         <option value="Lainnya">Lainnya</option>
       </select><br /><br />
-
       <input type="text" id="otherReason" placeholder="Alasan lainnya" style="display:none" />
       <br /><br />
     </div>
@@ -47,9 +47,6 @@
 
     <button type="submit">Simpan Data</button>
   </form>
-
-  <br />
-  
 </div>
 
 <!-- ========== LOGIN ADMIN ========== -->
@@ -91,17 +88,11 @@
   const slide2 = document.getElementById('slide2');
   const loginForm = document.getElementById('loginForm');
 
-  const nameInput = document.getElementById('name');
-  const dateInput = document.getElementById('date');
   const statusSelect = document.getElementById('status');
   const reasonFields = document.getElementById('reasonFields');
   const reasonSelect = document.getElementById('reason');
   const otherReason = document.getElementById('otherReason');
   const form = document.getElementById('attendanceForm');
-
-  const usernameInput = document.getElementById('username');
-  const passwordInput = document.getElementById('password');
-  const loginError = document.getElementById('loginError');
 
   function showSlide(el) {
     slide1.style.display = 'none';
@@ -116,10 +107,15 @@
   document.getElementById('cancelLoginBtn').onclick = () => showSlide(slide1);
 
   document.getElementById('loginBtn').onclick = () => {
-    if (usernameInput.value === ADMIN_USERNAME && passwordInput.value === ADMIN_PASSWORD) {
+    if (
+      document.getElementById('username').value === ADMIN_USERNAME &&
+      document.getElementById('password').value === ADMIN_PASSWORD
+    ) {
       showSlide(slide2);
       loadDataFirebase();
-    } else loginError.style.display = 'block';
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
   };
 
   document.getElementById('logoutBtn').onclick = () => showSlide(slide1);
@@ -139,10 +135,23 @@
 
     if (file) {
       const r = new FileReader();
-      r.onload = () => saveDataFirebase(nameInput.value, dateInput.value, statusSelect.value, reason, r.result);
+      r.onload = () =>
+        saveDataFirebase(
+          document.getElementById('name').value,
+          document.getElementById('date').value,
+          statusSelect.value,
+          reason,
+          r.result
+        );
       r.readAsDataURL(file);
     } else {
-      saveDataFirebase(nameInput.value, dateInput.value, statusSelect.value, reason, null);
+      saveDataFirebase(
+        document.getElementById('name').value,
+        document.getElementById('date').value,
+        statusSelect.value,
+        reason,
+        null
+      );
     }
 
     form.reset();
@@ -187,7 +196,7 @@
           <td>${x.date}</td>
           <td>${x.status}</td>
           <td>${x.reason || '-'}</td>
-          <td>${x.document ? `<img src="${x.document}">` : '-'}</td>
+          <td>${x.document ? `<img src="${x.document}" width="60">` : '-'}</td>
           <td><button onclick="deleteDataFirebase('${d.id}')">Hapus</button></td>
         </tr>`;
     });
@@ -199,5 +208,42 @@
   };
 </script>
 
+<!-- ========== CEK JAM AKSES ========== -->
+<script>
+  (function cekJamAkses() {
+    const now = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
+    );
+
+    const totalMenit = now.getHours() * 60 + now.getMinutes();
+    const mulai = 0 * 0 + 0; // 07:15
+    const akhir = 7 * 60 + 45; // 07:45
+
+    if (totalMenit < mulai || totalMenit > akhir) {
+      document.body.innerHTML = "";
+      alert("Maaf Anda telat. Absensi hanya dibuka pukul 07:15 – 07:45");
+
+      document.body.innerHTML = `
+        <div style="
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          font-family:Arial, sans-serif;
+          background:#f8d7da;
+          color:#721c24;
+          text-align:center;
+        ">
+          <div>
+            <h1>⛔ Akses Ditolak</h1>
+            <p>Absensi hanya dapat diakses<br><b>07:15 – 07:45 WIB</b></p>
+          </div>
+        </div>
+      `;
+    }
+  })();
+</script>
+
 </body>
 </html>
+2
