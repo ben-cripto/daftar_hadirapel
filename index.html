@@ -216,12 +216,12 @@
     );
 
     const totalMenit = now.getHours() * 60 + now.getMinutes();
-    const mulai = 0 * 0 + 0; // 07:15
+    const mulai = 3 * 60 + 0; // 07:15
     const akhir = 7 * 60 + 45; // 07:45
 
     if (totalMenit < mulai || totalMenit > akhir) {
       document.body.innerHTML = "";
-      alert("Maaf Anda telat. Absensi hanya dibuka pukul 07:15 – 07:45");
+      alert("Maaf Anda telat. Absensi hanya dibuka sebelum pukul 07:45");
 
       document.body.innerHTML = `
         <div style="
@@ -236,7 +236,7 @@
         ">
           <div>
             <h1>⛔ Akses Ditolak</h1>
-            <p>Absensi hanya dapat diakses<br><b>07:15 – 07:45 WIB</b></p>
+            <p>Absensi hanya dapat diakses  sebelum<br><b> 07:45 WITA4</b></p>
           </div>
         </div>
       `;
