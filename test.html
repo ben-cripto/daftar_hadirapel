@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test Firestore</title>
+</head>
+<body>
+
+<button id="testBtn">TES FIRESTORE</button>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyACw9VUL4lUuoQCk2N3x4yJbFBoIRI7NQA",
+    authDomain: "data-hadir-apel-pagi.firebaseapp.com",
+    projectId: "data-hadir-apel-pagi",
+    storageBucket: "data-hadir-apel-pagi.appspot.com",
+    messagingSenderId: "586083384554",
+    appId: "1:586083384554:web:004e574d9a780a4bd9eb93"
+  };
+
+  console.log("1️⃣ Script jalan");
+
+  const app = initializeApp(firebaseConfig);
+  console.log("2️⃣ App:", app);
+
+  const db = getFirestore(app);
+  console.log("3️⃣ Firestore:", db);
+
+  document.getElementById("testBtn").addEventListener("click", async () => {
+    try {
+      await addDoc(collection(db, "debug_test"), {
+        status: "connected",
+        time: new Date()
+      });
+      alert("✅ FIRESTORE CONNECTED");
+    } catch (e) {
+      console.error("❌ ERROR ASLI:", e);
+      alert(e.message);
+    }
+  });
+</script>
+
+</body>
+</html>

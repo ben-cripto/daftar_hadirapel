@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Hadir Apel Pagi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- ========== SLIDE 1 : FORM INPUT ========== -->
+<div id="slide1" class="slide">
+  <h2>Form Kehadiran Apel Pagi</h2>
+  <button id="toSlide2Btn" style="max-width: 150px; align-items: right; position: relative; bottom: 20px;">Login Admin</button>
+
+  <form id="attendanceForm">
+    <label>Nama:</label><br />
+    <input type="text" id="name" required /><br /><br />
+
+    <label>Divisi:</label><br />
+    <input type="text" id="division" required /><br /><br />
+
+    <label>Tanggal:</label><br />
+    <input type="date" id="date" required /><br /><br />
+
+    <label>Status:</label><br />
+    <select id="status" required>
+      <option value="Hadir">Hadir</option>
+      <option value="Tidak Hadir">Tidak Hadir</option>
+      <option value="Berhalangan">Berhalangan</option>
+    </select><br /><br />
+
+    <div id="reasonFields" style="display:none">
+      <label>Alasan:</label><br />
+      <select id="reason">
+        <option value="">Pilih alasan</option>
+        <option value="Sakit">Sakit</option>
+        <option value="Izin">Izin</option>
+        <option value="Lainnya">Lainnya</option>
+      </select><br /><br />
+
+      <input type="text" id="otherReason" placeholder="Alasan lainnya" style="display:none" />
+      <br /><br />
+    </div>
+
+    <label>Dokumen (opsional):</label><br />
+    <input type="file" id="document" accept="image/*" /><br /><br />
+
+    <button type="submit">Simpan Data</button>
+  </form>
+
+  <br />
+  
+</div>
+
+<!-- ========== LOGIN ADMIN ========== -->
+<div id="loginForm" class="slide">
+  <h3>Login Admin</h3>
+  <input type="text" id="username" placeholder="Username" /><br /><br />
+  <input type="password" id="password" placeholder="Password" /><br /><br />
+  <button id="loginBtn">Login</button>
+  <button id="cancelLoginBtn">Batal</button>
+  <p id="loginError" style="color:red;display:none">Login gagal</p>
+</div>
+
+<!-- ========== SLIDE 2 : DATA ADMIN ========== -->
+<div id="slide2" class="slide">
+  <h2>Data Kehadiran</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Nama</th>
+        <th>Tanggal</th>
+        <th>Status</th>
+        <th>Alasan</th>
+        <th>Dokumen</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="attendanceBody"></tbody>
+  </table>
+  <br />
+  <button id="logoutBtn">Logout</button>
+</div>
+
+<!-- ========== SCRIPT UI ========== -->
+<script>
+  const ADMIN_USERNAME = 'subbag umum';
+  const ADMIN_PASSWORD = 'umum 123';
+
+  const slide1 = document.getElementById('slide1');
+  const slide2 = document.getElementById('slide2');
+  const loginForm = document.getElementById('loginForm');
+
+  const nameInput = document.getElementById('name');
+  const dateInput = document.getElementById('date');
+  const statusSelect = document.getElementById('status');
+  const reasonFields = document.getElementById('reasonFields');
+  const reasonSelect = document.getElementById('reason');
+  const otherReason = document.getElementById('otherReason');
+  const form = document.getElementById('attendanceForm');
+
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+  const loginError = document.getElementById('loginError');
+
+  function showSlide(el) {
+    slide1.style.display = 'none';
+    slide2.style.display = 'none';
+    loginForm.style.display = 'none';
+    el.style.display = 'block';
+  }
+
+  showSlide(slide1);
+
+  document.getElementById('toSlide2Btn').onclick = () => showSlide(loginForm);
+  document.getElementById('cancelLoginBtn').onclick = () => showSlide(slide1);
+
+  document.getElementById('loginBtn').onclick = () => {
+    if (usernameInput.value === ADMIN_USERNAME && passwordInput.value === ADMIN_PASSWORD) {
+      showSlide(slide2);
+      loadDataFirebase();
+    } else loginError.style.display = 'block';
+  };
+
+  document.getElementById('logoutBtn').onclick = () => showSlide(slide1);
+
+  statusSelect.onchange = () => {
+    reasonFields.style.display = statusSelect.value === 'Hadir' ? 'none' : 'block';
+  };
+
+  reasonSelect.onchange = () => {
+    otherReason.style.display = reasonSelect.value === 'Lainnya' ? 'block' : 'none';
+  };
+
+  form.onsubmit = e => {
+    e.preventDefault();
+    const reason = reasonSelect.value === 'Lainnya' ? otherReason.value : reasonSelect.value;
+    const file = document.getElementById('document').files[0];
+
+    if (file) {
+      const r = new FileReader();
+      r.onload = () => saveDataFirebase(nameInput.value, dateInput.value, statusSelect.value, reason, r.result);
+      r.readAsDataURL(file);
+    } else {
+      saveDataFirebase(nameInput.value, dateInput.value, statusSelect.value, reason, null);
+    }
+
+    form.reset();
+    reasonFields.style.display = 'none';
+    otherReason.style.display = 'none';
+  };
+</script>
+
+<!-- ========== FIREBASE ========== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyACw9VUL4lUuoQCk2N3x4yJbFBoIRI7NQA",
+    authDomain: "data-hadir-apel-pagi.firebaseapp.com",
+    projectId: "data-hadir-apel-pagi",
+    storageBucket: "data-hadir-apel-pagi.appspot.com",
+    messagingSenderId: "586083384554",
+    appId: "1:586083384554:web:004e574d9a780a4bd9eb93"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const colRef = collection(db, 'attendance');
+
+  window.saveDataFirebase = async (name, date, status, reason, document) => {
+    await addDoc(colRef, { name, date, status, reason, document, createdAt: new Date() });
+    alert('Data berhasil disimpan');
+    loadDataFirebase();
+  };
+
+  window.loadDataFirebase = async () => {
+    const body = document.getElementById('attendanceBody');
+    body.innerHTML = '';
+    const snap = await getDocs(colRef);
+    snap.forEach(d => {
+      const x = d.data();
+      body.innerHTML += `
+        <tr>
+          <td>${x.name}</td>
+          <td>${x.date}</td>
+          <td>${x.status}</td>
+          <td>${x.reason || '-'}</td>
+          <td>${x.document ? `<img src="${x.document}">` : '-'}</td>
+          <td><button onclick="deleteDataFirebase('${d.id}')">Hapus</button></td>
+        </tr>`;
+    });
+  };
+
+  window.deleteDataFirebase = async id => {
+    await deleteDoc(doc(db, 'attendance', id));
+    loadDataFirebase();
+  };
+</script>
+
+</body>
+</html>
